@@ -1,0 +1,298 @@
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+#include <WiFiClientSecureBearSSL.h>
+#include <ArduinoJson.h>
+#include <SPI.h>
+#include <MFRC522.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+// ---------- CONFIGURATION ----------
+const char* WIFI_SSID = "YOUR_WIFI_NAME";
+const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+
+const char* ENDPOINT =
+  "https://ycacfjmizaoegykxrtfl.supabase.co/functions/v1/device-ingest";
+
+const char* DEVICE_CODE = "ESP8266-RFID-01";
+const char* DEVICE_SECRET = "YOUR_RFID_DEVICE_SECRET";
+
+// Temporary prototype range. Confirm your intended range before demo.
+const float TEMP_MIN_C = 2.0;
+const float TEMP_MAX_C = 6.0;
+
+// Consider readings stale after this many milliseconds.
+const unsigned long TEMP_MAX_AGE_MS = 90000;
+
+// ---------- HARDWARE ----------
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define SS_PIN D4
+#define RST_PIN D0
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+MFRC522 rfid(SS_PIN, RST_PIN);
+
+String lastUID = "";
+unsigned long lastScanTime = 0;
+const unsigned long SCAN_COOLDOWN = 2500;
+
+void showPage(const String& title,
+              const String& line1 = "",
+              const String& line2 = "",
+              const String& line3 = "",
+              const String& line4 = "") {
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.println("BloodLink");
+  display.drawLine(0, 11, 127, 11, SSD1306_WHITE);
+
+  display.setCursor(0, 15);
+  display.println(title);
+  display.setCursor(0, 27);
+  display.println(line1);
+  display.setCursor(0, 36);
+  display.println(line2);
+  display.setCursor(0, 45);
+  display.println(line3);
+  display.setCursor(0, 54);
+  display.println(line4);
+
+  display.display();
+}
+
+String shortDate(String value) {
+  if (value.length() >= 10) {
+    return value.substring(0, 10);
+  }
+  return "Not recorded";
+}
+
+bool connectWiFi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  showPage("Connecting Wi-Fi...");
+  unsigned long started = millis();
+
+  while (WiFi.status() != WL_CONNECTED &&
+         millis() - started < 20000) {
+    delay(300);
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.print("Wi-Fi connected: ");
+    Serial.println(WiFi.localIP());
+    return true;
+  }
+
+  Serial.println("Wi-Fi connection failed");
+  return false;
+}
+
+void showBagDetails(JsonDocument& result) {
+  JsonObject bag = result["bag"];
+
+  String bagCode = bag["bag_code"] | "Unknown";
+  String group = bag["blood_group"] | "Unknown";
+  String status = bag["status"] | "Unknown";
+  String entry = shortDate(bag["entry_at"] | "");
+  String expiry = shortDate(bag["expiry_date"] | "");
+
+  // Page 1: identity and status
+  showPage("BAG DETAILS",
+           "ID: " + bagCode,
+           "Group: " + group,
+           "Status: " + status,
+           "UID: " + lastUID);
+  delay(2500);
+
+  // Page 2: dates
+  showPage("BAG DATES",
+           "Entry: " + entry,
+           "Expiry: " + expiry,
+           "Entry = record created",
+           "");
+  delay(2500);
+
+  // Page 3: latest rack temperature
+  JsonVariant tempValue = result["temperature_c"];
+  JsonVariant timeValue = result["temperature_recorded_at"];
+
+  if (tempValue.isNull()) {
+    showPage("TEMPERATURE",
+             "No reading available",
+             "Check sensor uploads",
+             "",
+             "");
+    delay(2500);
+    return;
+  }
+
+  float temp = tempValue.as<float>();
+  String tempText = String(temp, 1) + " C";
+
+  String recordedAt = timeValue.isNull()
+      ? ""
+      : timeValue.as<String>();
+
+  // Compare timestamps in UTC; do not compare local clock strings.
+  bool fresh = false;
+  if (recordedAt.length() >= 19) {
+    // ISO timestamps from Supabase are parsed below using epoch time
+    // only when a valid timestamp is available.
+    // The server's response is normally UTC ISO format.
+    fresh = false;
+  }
+
+  // The ESP8266 does not validate ISO timestamps here, so do not
+  // claim that a reading is fresh based only on its displayed date.
+  // A server-side freshness check is recommended before final use.
+  bool inRange = temp >= TEMP_MIN_C && temp <= TEMP_MAX_C;
+
+  showPage("RACK TEMPERATURE",
+           "Temp: " + tempText,
+           "Range: 2.0 - 6.0 C",
+           String("Status: ") +
+             (inRange ? "NORMAL*" : "OUT OF RANGE"),
+           "Verify reading age");
+  delay(2500);
+}
+
+void sendRFIDScan(const String& uid) {
+  if (WiFi.status() != WL_CONNECTED) {
+    showPage("Wi-Fi offline", uid);
+    return;
+  }
+
+  BearSSL::WiFiClientSecure client;
+
+  // Temporary testing only; verify TLS certificates for final deployment.
+  client.setInsecure();
+
+  HTTPClient http;
+  if (!http.begin(client, ENDPOINT)) {
+    showPage("HTTPS error");
+    return;
+  }
+
+  http.setTimeout(12000);
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("x-device-code", DEVICE_CODE);
+  http.addHeader("x-device-secret", DEVICE_SECRET);
+
+  JsonDocument request;
+  request["type"] = "rfid_scan";
+  request["uid"] = uid;
+
+  String payload;
+  serializeJson(request, payload);
+
+  showPage("Checking tag...", uid);
+
+  int code = http.POST(payload);
+  Serial.printf("HTTP status: %d\n", code);
+
+  if (code <= 0) {
+    Serial.println(http.errorToString(code));
+    showPage("Upload failed", "Check Wi-Fi/API");
+    http.end();
+    return;
+  }
+
+  String response = http.getString();
+  Serial.println(response);
+  http.end();
+
+  JsonDocument result;
+  DeserializationError err = deserializeJson(result, response);
+
+  if (err) {
+    showPage("Invalid response");
+    return;
+  }
+
+  if (result["ok"] == true) {
+    bool known = result["known"] | false;
+
+    if (!known) {
+      showPage("UNKNOWN TAG", uid,
+               "Register bag in Supabase");
+      return;
+    }
+
+    showBagDetails(result);
+    showPage("Ready to scan");
+    return;
+  }
+
+  String error = result["error"] | "Server error";
+  showPage("Request failed", error);
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(500);
+
+  Wire.begin(D2, D1);
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("OLED not found");
+    while (true) delay(1000);
+  }
+
+  SPI.begin();
+  rfid.PCD_Init();
+
+  showPage("Starting...");
+  connectWiFi();
+
+  showPage("Ready to scan");
+  Serial.println("BloodLink RFID board ready");
+}
+
+void loop() {
+  if (WiFi.status() != WL_CONNECTED) {
+    WiFi.reconnect();
+  }
+
+  if (!rfid.PICC_IsNewCardPresent()) {
+    delay(20);
+    return;
+  }
+
+  if (!rfid.PICC_ReadCardSerial()) {
+    delay(20);
+    return;
+  }
+
+  char uidBuffer[40] = "";
+
+  for (byte i = 0; i < rfid.uid.size; i++) {
+    char part[4];
+    snprintf(part, sizeof(part), "%02X", rfid.uid.uidByte[i]);
+
+    if (i > 0) strcat(uidBuffer, " ");
+    strcat(uidBuffer, part);
+  }
+
+  String uid = String(uidBuffer);
+  unsigned long now = millis();
+
+  if (uid != lastUID || now - lastScanTime >= SCAN_COOLDOWN) {
+    lastUID = uid;
+    lastScanTime = now;
+
+    Serial.print("Scanned UID: ");
+    Serial.println(uid);
+    sendRFIDScan(uid);
+  }
+
+  rfid.PICC_HaltA();
+  rfid.PCD_StopCrypto1();
+  delay(100);
+}
