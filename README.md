@@ -1,214 +1,201 @@
-BloodLink — Smart Blood Bank Monitoring and Management System
-BloodLink is an IoT-based academic prototype designed to demonstrate how blood-bank inventory can be monitored and managed using RFID identification, environmental sensing, embedded devices, cloud services, and a web application.
-The system combines ESP8266 microcontrollers, RFID readers and tags, temperature and humidity monitoring, IR sensors, an OLED display, and Supabase as the cloud database and backend platform. A web application provides a centralized interface for blood-bag and device information.
-The physical demonstration is organized around four storage slots representing the four blood groups. Each slot can accommodate multiple blood-bag records; RFID identifies an individual tagged bag rather than treating the slot as the bag itself.
-Project status: Completed academic prototype. BloodLink demonstrates inventory-monitoring concepts and is not a certified blood-storage, blood-safety, or clinical decision-making system.
-1. Project Overview
-Blood banks need reliable ways to identify individual units, maintain organized inventory records, and monitor storage conditions. BloodLink explores how an IoT system can connect physical storage and tagged items with centralized digital records.
-RFID provides an identification mechanism for individual blood bags. Environmental sensors measure temperature and humidity, while IR sensors provide supplementary object-presence detection. ESP8266 boards interface with the hardware and provide Wi-Fi connectivity. Supabase supplies cloud database and backend capabilities, and the web application is intended to make inventory and device information accessible through a centralized interface. An OLED display provides local feedback at the device.
-The project brings together three major areas:
-Embedded systems: Microcontrollers, sensors, RFID readers, and a local display.
-Cloud-connected IoT: Wi-Fi communication and Supabase-backed data services.
-Inventory management software: Structured blood-bag and device records presented through a web application.
-BloodLink is a prototype for demonstrating identification, monitoring, and digital inventory workflows. It does not replace approved blood-bank procedures or clinical verification.
-2. Project Objectives
-Identify individual tagged blood bags using RFID.
-Demonstrate a four-slot arrangement representing the four blood groups.
-Monitor environmental temperature and humidity.
-Detect object presence using IR sensors.
-Provide local information through an OLED display.
-Connect embedded hardware to cloud services through Wi-Fi.
-Store blood-bag and device information in a structured database.
-Provide a web-based interface for centralized inventory monitoring and record management.
-3. Main Features and Implementation Status
-Feature
-Purpose
-Status supported by available project information
-RFID identification
-Read a tag identifier associated with an individual blood bag
-RFID-based identification is part of the project workflow; complete RFID-to-database behaviour should be verified against the final source
-Four-slot arrangement
-Represent the four blood groups in the physical demonstration
-Confirmed project design; each slot can represent multiple bags
-Temperature monitoring
-Observe storage-area temperature
-Temperature readings were obtained through serial output during development
-Humidity monitoring
-Observe environmental humidity
-Humidity readings were obtained through serial output during development
-IR sensors
-Provide supplementary object-presence detection
-Two sensors were tested; clear states were observed and detection with a hand in front of a sensor was reported
-OLED display
-Present selected information locally
-OLED integration was part of the project; exact final screen behaviour depends on the completed firmware
-Supabase database
-Store blood-bag and device records
-blood_bags and devices are known table names from the project discussion
-Supabase Edge Functions
-Support server-side processing and hardware/backend workflows
-Included in the architecture; exact deployed function contracts require the source code for verification
-Web application
-Centralize access to inventory and device information
-Part of the project; exact framework and refresh behaviour are not established by the available details
-Environmental alerts
-Notify users when configured conditions are exceeded
-Treat as future work unless confirmed in the final implementation
-4. System Architecture
-The system is organized into hardware, embedded processing, communication, cloud backend, database, and web application layers.
-flowchart TB
-    subgraph HW["Hardware and Sensing Layer"]
-        RFID["RFID Reader and Tags"]
-        ENV["Temperature and Humidity Sensor"]
-        IR["IR Sensor 1 and IR Sensor 2"]
-        OLED["OLED Display"]
-    end
 
-    subgraph MCU["Embedded Layer"]
-        ESP["ESP8266 Firmware"]
-    end
+🩸 BloodLink
+Smart Blood Bank Monitoring and Management System
+� � � � �
+An IoT-based prototype for RFID blood-bag identification, environmental monitoring, and cloud-connected inventory management.
 
-    subgraph NET["Communication Layer"]
-        WIFI["Wi-Fi Network"]
-    end
-
-    subgraph CLOUD["Cloud Backend Layer"]
-        EDGE["Supabase Edge Functions"]
-        DB[("Supabase Database")]
-    end
-
-    subgraph APP["Application Layer"]
-        WEB["Web Application"]
-    end
-
-    RFID --> ESP
-    ENV --> ESP
-    IR --> ESP
-    ESP --> OLED
-    ESP -. "Network requests, according to firmware configuration" .-> WIFI
-    WIFI -.-> EDGE
-    EDGE -. "Backend database operations" .-> DB
-    WEB -. "Database access according to application configuration" .-> DB
-    WEB -. "Function calls where configured" .-> EDGE
-Architecture overview
-Hardware and sensing: RFID reads tag identifiers; the environmental sensor measures temperature and humidity; IR sensors provide presence states.
-Embedded processing: ESP8266 firmware interfaces with the connected modules and handles the device-side logic.
-Local feedback: The OLED is intended to show selected information without requiring the operator to consult the web interface.
-Network communication: The ESP8266 provides Wi-Fi connectivity for communication with cloud services.
-Cloud backend: Supabase Edge Functions can perform server-side operations for requests from supported clients.
-Database: Supabase stores the blood-bag and device records used by the system.
-Web application: The application provides a centralized view of the information and management workflows supported by its implementation.
-The diagram describes the system's logical architecture. Exact request paths, database operations, and automatic synchronization behaviour depend on the final firmware, Edge Function, and web-application source. Local sensor readings alone do not prove that every measurement is uploaded to the cloud.
-5. Hardware Components
-Component
-Role in BloodLink
-Interface details
-ESP8266 development board(s)
-Embedded processing and Wi-Fi connectivity
-GPIO and Wi-Fi; exact board model and pin assignments must be taken from the final firmware
-RFID reader module
-Reads identifiers from compatible RFID tags
-Exact reader model, communication bus, library, and pin mapping need confirmation from the source
-RFID tags/cards
-Provide identifiers for individual tagged bags
-Read wirelessly by the compatible RFID reader
-Temperature and humidity sensor
-Measures environmental conditions
-Exact sensor model, interface, library, and pin assignment need confirmation
-IR sensor 1
-Detects nearby object presence
-Exact module, output polarity, and pin mapping need confirmation
-IR sensor 2
-Provides a second object-presence input
-Exact module, output polarity, and pin mapping need confirmation
-OLED display
-Shows selected device or inventory information locally
-Exact display controller, bus, address, and pin mapping need confirmation
-Storage-slot demonstration
-Organizes the physical model into four blood-group categories
-Each slot may represent multiple individual blood bags
-Hardware configuration note
-The project discussion confirms the component categories, but the complete final firmware and wiring diagram are not available in the material used to prepare this document. For that reason, exact GPIO numbers, module models, and library names are not guessed here. The tested firmware and physical wiring should be treated as the source of truth for those details.
-6. Technology Stack
+📌 What is BloodLink?
+BloodLink is a smart blood-bank monitoring and management prototype that connects physical storage hardware with a cloud-backed inventory system. It combines RFID-based identification, temperature and humidity sensing, IR-based object detection, an OLED display, ESP8266 microcontrollers, Supabase services, and a web application.
+The demonstration uses four storage slots representing the four blood groups. Each slot can accommodate multiple blood-bag records. RFID is used to identify an individual tagged bag, while the slot represents its category or storage position in the demonstration.
+The goal is to demonstrate how embedded hardware and cloud software can work together to make inventory information easier to identify, organize, and monitor.
+Project scope: BloodLink is a completed academic prototype. It is not a certified blood-storage, blood-safety, or clinical decision-making system.
+Core capabilities
+Capability
+Role in the system
+🏷️ RFID identification
+Reads a tag identifier associated with an individual blood bag
+🌡️ Environmental monitoring
+Reads temperature and humidity through a connected sensor
+📡 Object-presence detection
+Uses two IR sensors for supplementary presence detection
+🖥️ Local feedback
+Uses an OLED display for selected device or inventory information
+📶 Embedded connectivity
+Uses ESP8266 Wi-Fi connectivity for communication with cloud services
+☁️ Cloud data management
+Uses Supabase tables and Edge Functions as part of the backend architecture
+🌐 Web-based management
+Provides a centralized interface for inventory and device information
+🧊 Four-slot demonstration
+Represents four blood-group categories, with multiple bags per slot
+🏗️ System Architecture
+BloodLink is organized into six logical layers: sensing, embedded processing, communication, backend services, database, and web application.
+┌───────────────────────────────────────────────────────────┐
+│                 HARDWARE & SENSING LAYER                  │
+│                                                           │
+│   RFID Reader + Tags   Temperature/Humidity Sensor        │
+│   IR Sensor 1          IR Sensor 2          OLED Display  │
+└───────────────┬───────────────────┬───────────────────────┘
+                │                   │
+                ▼                   ▼
+┌───────────────────────────────────────────────────────────┐
+│                   EMBEDDED LAYER                           │
+│                                                           │
+│                     ESP8266 Board(s)                       │
+│       Peripheral reading • Local processing • Wi-Fi       │
+└────────────────────────────┬──────────────────────────────┘
+                             │
+                             ▼
+┌───────────────────────────────────────────────────────────┐
+│                  COMMUNICATION LAYER                       │
+│                         Wi-Fi                             │
+└────────────────────────────┬──────────────────────────────┘
+                             │
+                             ▼
+┌───────────────────────────────────────────────────────────┐
+│                   CLOUD / BACKEND                          │
+│                                                           │
+│              Supabase Edge Function(s)                     │
+│           Server-side processing and validation            │
+└────────────────────────────┬──────────────────────────────┘
+                             │
+                             ▼
+┌───────────────────────────────────────────────────────────┐
+│                     DATABASE                              │
+│                                                           │
+│                Supabase PostgreSQL                         │
+│             blood_bags • devices                           │
+└────────────────────────────┬──────────────────────────────┘
+                             │
+                             ▼
+┌───────────────────────────────────────────────────────────┐
+│                  APPLICATION LAYER                         │
+│                                                           │
+│             Web Application / Inventory UI                 │
+│       Centralized access to supported records              │
+└───────────────────────────────────────────────────────────┘
+Architecture responsibilities
 Layer
-Technology
-Role
-Embedded controller
-ESP8266
-Reads connected peripherals and provides Wi-Fi connectivity
-Identification
-RFID reader and tags
-Identifies tagged items
-Environmental monitoring
-Temperature/humidity sensor
-Measures environmental conditions
-Presence detection
-Two IR sensors
-Provides supplementary object-presence states
-Local interface
-OLED display
-Provides device-side feedback
-Network
+Components
+Responsibility
+Hardware
+RFID reader, environmental sensor, IR sensors, OLED
+Reads tags and sensor inputs; presents local feedback
+Embedded
+ESP8266 firmware
+Interfaces with peripherals and handles device-side logic
+Communication
 Wi-Fi
-Connects the embedded device to network services
-Cloud platform
-Supabase
-Provides the database and backend platform
-Server-side processing
+Provides the network path from the ESP8266 to cloud services
+Backend
 Supabase Edge Functions
-Supports backend operations
-Data storage
-Supabase database
-Stores blood-bag and device records
-User interface
+Supports server-side operations used by the application or device
+Database
+Supabase tables
+Stores blood-bag and device information
+Application
 Web application
-Provides centralized inventory and device information
-The exact firmware language, board package, peripheral libraries, web framework, and package manager should be documented from the final source files rather than inferred from common choices for similar projects.
-7. Working Principle
-7.1 Blood-bag identification with RFID
-Each tagged blood bag can be identified by presenting its RFID tag to a compatible reader. The reader obtains the tag identifier, which the firmware can use to identify the corresponding bag record according to the implemented lookup and backend logic.
-RFID is useful for distinguishing individual tagged items without requiring each bag to be identified by its physical slot alone. The four slots represent blood-group categories in the demonstration, while multiple individual bag records may belong to a slot.
-A tag identifier does not independently verify the bag's blood group, compatibility, expiry, authenticity, or clinical suitability. Those properties require reliable records and approved verification procedures.
-7.2 Temperature and humidity monitoring
-The environmental sensor provides temperature and humidity readings to the connected microcontroller. During development, readings were observed through the serial monitor. An example recorded output was:
+Presents centralized inventory and device information
+Implementation note: This is the logical architecture of the project. The exact firmware request paths, Edge Function names, and web-app synchronization behaviour must be confirmed from the final source code. Local sensor readings do not, by themselves, prove that every measurement is uploaded to the database.
+🔄 How BloodLink Works
+RFID Tag / Sensors
+        │
+        ▼
+ESP8266 reads connected peripherals
+        │
+        ├──► OLED provides local feedback
+        │
+        ▼
+Wi-Fi communication
+        │
+        ▼
+Supabase backend processing
+        │
+        ▼
+Database records
+        │
+        ▼
+Web application
+The complete workflow is intended to operate as follows:
+Sense: The environmental sensor measures temperature and humidity. The two IR sensors provide object-presence states.
+Identify: When a compatible RFID tag is presented to the reader, its identifier can be used to identify an individual blood-bag record.
+Process: The ESP8266 firmware reads the attached modules and handles device-side logic.
+Display: The OLED provides local feedback according to the display logic implemented in the firmware.
+Communicate: The ESP8266 uses Wi-Fi to reach configured backend services.
+Process and store: Supabase Edge Functions and database operations support the cloud workflow implemented by the project.
+Review: The web application provides centralized access to the records and actions it supports.
+The precise request formats, retry behaviour, database updates, and synchronization mechanisms depend on the final implementation. This README does not assume automatic real-time synchronization unless it is confirmed by the source.
+🏷️ RFID-Based Blood-Bag Identification
+RFID is the mechanism intended to distinguish individual tagged blood bags.
+Identification workflow
+Present tagged blood bag
+          │
+          ▼
+RFID reader reads tag identifier
+          │
+          ▼
+ESP8266 processes the identifier
+          │
+          ▼
+Identifier is used by the implemented lookup/workflow
+          │
+          ▼
+Corresponding blood-bag record
+RFID is important because the bag and the storage slot are different entities:
+Blood bag: An individual item identified by its tag.
+Storage slot: A location/category in the demonstration.
+Blood group: A category represented by one of the four slots.
+Database record: The digital representation used by the inventory application.
+A slot can represent multiple bags, so the design should not treat one RFID reader or one scan as equivalent to one permanently occupied slot. The exact tag-to-record lookup key, duplicate-scan handling, unknown-tag behaviour, and database transaction rules depend on the final firmware and backend code.
+RFID identifies a tag; it does not independently validate blood type, compatibility, expiry, sterility, or suitability for transfusion.
+🌡️ Environmental Monitoring
+The system includes temperature and humidity sensing connected to the embedded hardware.
+During development, sensor readings were observed through serial output. One recorded example was:
 Temperature: 31.80 C
 Humidity: 75.00 %
-These are example development readings, not calibrated reference measurements and not evidence that suitable blood-storage conditions were maintained. The exact sensor model, sampling interval, calibration, and any cloud-transmission behaviour should be confirmed from the final firmware.
-7.3 IR sensor operation
-Two IR sensors were used for supplementary object-presence detection. The development serial output included:
 IR Sensor 1: CLEAR
 IR Sensor 2: CLEAR
-The project discussion also records that detection was observed when a hand was placed in front of a sensor. The exact relationship between the electrical output and the displayed state depends on the sensor module and firmware logic.
-IR detection is separate from RFID identification: an IR sensor can indicate that an object is present, while RFID can provide an identifier for a compatible tagged item.
-7.4 ESP8266 processing and connectivity
-The ESP8266 is the embedded connection point for the attached peripherals. It reads the local inputs and can use Wi-Fi to communicate with backend services. The exact events sent, request formats, retry behaviour, and error handling are defined by the final firmware and should not be inferred solely from the architecture.
-7.5 OLED feedback
-The OLED is intended to present selected information locally, allowing the hardware to provide feedback without relying exclusively on the web application. The project discussion specified blood_bags.created_at as the source for the blood-bag entry-time display requirement. The precise final display layout and refresh logic should be confirmed from the completed OLED firmware.
-7.6 Cloud database and web application
-Supabase is used as the cloud database/backend platform. The known database tables include blood_bags and devices. Supabase Edge Functions form part of the backend architecture, while the web application provides a centralized interface for inventory and device information.
-The precise API contracts, access-control rules, and synchronization behaviour depend on the deployed functions and application code. Real-time updates or automatic uploads should only be claimed where the implementation confirms them.
-8. Database Design
-The database supports two known parts of the system: blood-bag information and device information. The available project discussion contains only partial schema details, so this section documents the known fields without inventing missing columns, keys, constraints, or relationships.
-8.1 blood_bags
+These are development observations, not calibrated reference measurements.
+Signal
+Purpose
+Evidence available
+Temperature
+Observe the surrounding storage environment
+Readings observed through serial output
+Humidity
+Observe environmental humidity
+Readings observed through serial output
+IR sensor 1
+Supplementary object-presence detection
+CLEAR state observed; detection with a hand in front of a sensor was reported
+IR sensor 2
+Second presence input
+CLEAR state observed in the recorded output
+The exact environmental sensor model, sampling interval, calibration, sensor library, and cloud transmission behaviour must be confirmed from the final firmware. Environmental monitoring alone cannot establish that a blood bag is safe or has remained within approved storage conditions.
+🖥️ OLED Display
+The OLED is intended to provide local information at the hardware prototype. It can complement the web interface by showing selected information at the device itself.
+The project discussion specified blood_bags.created_at as the source for the blood-bag entry-time display requirement.
+The exact final screen layout, display library, communication bus, address, refresh behaviour, and complete pin mapping should be taken from the final firmware and wiring. A database record's creation timestamp should not automatically be interpreted as the exact time a physical bag entered storage unless the application explicitly defines it that way.
+🗄️ Database Design
+Supabase is the cloud database/backend platform. The known table names are blood_bags and devices.
+blood_bags
 Property
 Description
-Table name
-blood_bags
 Purpose
 Stores blood-bag information and associated timestamps
 created_at
-Used as the blood-bag entry-time source for the OLED integration requirement discussed during development
+Timestamp used as the entry-time source for the OLED requirement discussed during development
 Other columns
-The complete column list and data types must be confirmed from the final Supabase schema
-Keys and constraints
-Primary key, foreign keys, uniqueness, and indexes require verification
-Access policies
-Row Level Security and database policies require verification
-Timestamp meaning: created_at is the database record's creation timestamp as used by the discussed integration. It should not automatically be interpreted as the donation time, collection time, expiry time, or exact physical arrival time unless the application explicitly defines it that way.
-8.2 devices
-The known schema fragment for devices included these columns:
+The complete column list and types require confirmation from the actual schema
+Keys and relationships
+Primary key, foreign keys, constraints, and indexes require confirmation
+Access control
+Row Level Security and database policies require inspection
+Timestamp semantics: created_at is used as the record-creation/entry-time source in the discussed integration. It should not automatically be treated as a donation date, collection date, expiry date, or verified physical storage-entry event.
+devices
+The available schema fragment contained the following fields:
 Column
-Type
+Data type
 Known meaning
 device_code
 text NOT NULL
@@ -227,76 +214,117 @@ timestamp without time zone NULL
 Record creation timestamp
 id
 uuid
-Present in the schema fragment; key/default/constraint details require verification
-The available schema fragment does not establish all constraints or the complete table definition. The primary key, default values, indexes, foreign keys, and RLS policies must be checked in the actual Supabase schema.
-8.3 Data relationships
-The intended data model distinguishes individual blood-bag records from devices and from the four physical demonstration slots. The exact database relationship between a bag, its slot or blood group, and a device cannot be confirmed from the available schema fragment.
-For an accurate final schema description, inspect the actual database or migration files and verify:
-All table columns, data types, nullability, and defaults.
-Primary and foreign keys.
-Constraints and indexes.
-Relationships between bags, slots, and devices.
-Row Level Security settings and policies.
-Timestamp generation and time-zone assumptions.
-9. Backend and Web Application
-Supabase backend
-Supabase provides the cloud database and backend services used by BloodLink. Supabase Edge Functions are part of the architecture for server-side processing and hardware communication workflows.
-The exact deployed function names, request methods, URL paths, payload fields, response formats, authentication configuration, and error handling are not included in the verified project details available here. They should be documented from the actual function source rather than replaced with guessed API examples.
-Web application
-The web application is intended to provide a centralized interface for blood-bag records and device information. It complements the embedded hardware by presenting information in a form suitable for inventory review and record management.
-The exact framework, page structure, authentication flow, database queries, and update mechanism require confirmation from the application source. The existence of a web application does not by itself establish live synchronization, push notifications, or real-time subscriptions.
-10. Security Considerations
-BloodLink is an academic prototype, but the following principles matter when handling its cloud backend:
-Do not commit Wi-Fi passwords, private keys, access tokens, or real service credentials.
+Present in the fragment; key/default details require confirmation
+The available fragment does not establish the full table definition, primary-key constraints, defaults, indexes, foreign keys, or Row Level Security policies.
+Database responsibilities
+Maintain structured blood-bag records.
+Store device identifiers and relevant device metadata.
+Provide data access for the backend and web application according to configured permissions.
+Support inventory and device-management workflows implemented by the application.
+The exact relationship between a bag, a slot/blood group, and a device must be confirmed from the complete schema. No additional columns or foreign-key relationships are assumed here.
+☁️ Supabase Backend
+Supabase forms the cloud side of BloodLink. The project architecture includes:
+Supabase database: Stores the known blood_bags and devices tables.
+Supabase Edge Functions: Provide a server-side processing layer for configured workflows.
+Web application: Uses the backend/database access path implemented in the application.
+ESP8266 connectivity: Provides a network-capable embedded endpoint for configured device-to-cloud communication.
+The exact deployed Edge Function names, HTTP methods, endpoint paths, JSON payloads, response formats, authentication settings, and error-handling behaviour cannot be reliably stated without the final function source. They should be documented from the deployed code rather than inferred from a generic Supabase setup.
+Security principles
 Never expose a Supabase service_role key in browser code or distributed ESP8266 firmware.
-Use appropriately scoped client credentials and enforce access through authentication and database policies.
-Review Row Level Security policies for every table exposed to client access.
-Validate backend requests and restrict each operation to the data and permissions it actually needs.
-Avoid publishing real blood-bag records or any patient-identifying information.
-Treat credentials embedded in firmware as potentially extractable.
-Rotate credentials if they are accidentally exposed in source control.
-The actual authentication and Row Level Security configuration must be inspected before making claims about the deployed system's security.
-11. Testing and Validation
-The following table summarizes the observations recorded during development. Local tests are distinguished from full cloud-to-web integration tests.
+Keep privileged credentials in appropriately protected server-side configuration.
+Apply least-privilege access and review Row Level Security policies.
+Validate incoming backend requests and restrict permitted database operations.
+Do not publish Wi-Fi passwords, private keys, API secrets, or real blood-bag/patient records.
+🌐 Web Application
+The web application provides the centralized software interface for the inventory system. Its purpose is to make supported blood-bag and device information accessible without relying only on the local hardware display.
+The application's exact framework, page structure, authentication flow, database queries, and refresh strategy should be verified from its source code. Automatic updates, real-time subscriptions, notifications, and specific management actions should only be described as implemented when confirmed by the actual application.
+🧪 Testing and Validation
+The project discussion contains the following development observations:
 Component
-Test or observation
-Result
-Temperature monitoring
-Read the sensor and inspect serial output
-Temperature readings were obtained; an example was 31.80 C
-Humidity monitoring
-Read the sensor and inspect serial output
-Humidity readings were obtained; an example was 75.00 %
+Validation performed / observation
+Status
+Temperature sensor
+Temperature readings obtained through serial output
+Observed locally
+Humidity sensor
+Humidity readings obtained through serial output
+Observed locally
 IR sensor states
-Inspect serial output for both sensors
-Both sensors displayed CLEAR in the recorded observation
+Both sensors displayed CLEAR in the recorded output
+Observed locally
 IR detection
-Place a hand in front of a sensor
-Correct detection was reported during testing
-RFID workflow
-Use RFID tags to identify individual items
-RFID-based identification was part of the project; exact end-to-end database behaviour requires verification against the final source
+Detection with a hand placed in front of a sensor was reported
+Tested at prototype level
+RFID
+RFID-based item identification was part of the project workflow
+Full database-linked behaviour should be verified from the final source/test record
 OLED
-Integrate a display for local information
-Integration was discussed; exact final output requires confirmation from the completed firmware
-Supabase and web application
-Review the cloud/database/application workflow
-The components are part of the project architecture; complete end-to-end test evidence is not established by the details available here
-These observations demonstrate local sensor testing, but they do not establish calibrated sensor accuracy, long-term reliability, successful operation during network outages, or complete end-to-end validation of every cloud workflow.
-12. Limitations
-BloodLink is an academic prototype, not a certified blood storage or clinical system.
-Environmental readings alone cannot establish blood safety or suitability for transfusion.
-Sensor accuracy, calibration, placement, sampling intervals, and fault detection require further validation.
-Network failure, power interruption, retry behaviour, local buffering, and data recovery require appropriate testing before operational deployment.
-The complete final firmware, database schema, Edge Function contracts, and web-app implementation should be used to verify exact technical details.
-Security policies, authentication, device identity, and access permissions require review before use with sensitive data.
-Real blood-bank deployment would require approved workflows, traceability, qualified personnel, and compliance with applicable standards and regulations.
-13. Future Improvements
-Potential extensions to BloodLink include:
-Environmental threshold alerts: Configurable limits and notifications when monitored conditions fall outside validated ranges.
-Device health monitoring: More complete tracking of connectivity, last-seen time, sensor faults, and device status.
-Inventory reporting: Summaries of stock by blood group, storage location, and inventory state.
-Audit logs: Traceable records of inventory changes and the users or devices responsible.
-Improved access controls: Role-based permissions and thoroughly tested database policies.
-Network resilience: Safe retry logic, local buffering, duplicate-request protection, and recovery after connectivity loss.
-Automated tests: Repeatable tests for RFID parsing,
+Local display integration was part of the project
+Exact final display behaviour requires confirmation
+Cloud/backend
+Supabase database and Edge Functions form part of the architecture
+Exact end-to-end request and persistence behaviour requires source/test verification
+Web application
+Centralized inventory/device interface forms part of the project
+Exact UI and synchronization behaviour require source verification
+These observations should not be interpreted as proof of calibrated sensor accuracy, long-term reliability, full cloud integration, or production readiness.
+🧰 Technology Stack
+Technology / component
+Role
+ESP8266
+Embedded controller and Wi-Fi connectivity
+RFID reader and tags
+Individual tag identification
+Temperature/humidity sensor
+Environmental monitoring
+IR sensors
+Supplementary object-presence detection
+OLED
+Local information display
+Wi-Fi
+Network communication
+Supabase
+Cloud database and backend platform
+Supabase Edge Functions
+Server-side processing for configured workflows
+Web application
+Centralized inventory and device interface
+The exact firmware language, peripheral libraries, web framework, and package manager are not listed here because the final source manifests were not available for verification. This avoids adding technologies merely because they are commonly used in similar projects.
+⚠️ Limitations
+BloodLink is an academic prototype, not a certified blood-storage, blood-safety, or clinical decision-making system.
+Temperature and humidity readings alone cannot establish blood safety or transfusion suitability.
+Sensor calibration, measurement accuracy, sampling behaviour, and fault detection require validation.
+Network and power failure handling, local buffering, retries, and data recovery need testing before any operational deployment.
+Exact pin assignments, peripheral models, full schema, API contracts, and web-app behaviour must be confirmed from the final source artifacts.
+Database permissions, authentication, device identity, and secret handling require security review before using sensitive data.
+Real blood-bank deployment requires approved workflows, traceability, qualified personnel, and compliance with applicable regulations.
+🚀 Future Improvements
+Improvement
+Potential benefit
+Configurable environmental threshold alerts
+Notify authorized users when readings exceed validated limits
+Device health monitoring
+Improve visibility into connectivity, last-seen time, and sensor faults
+Inventory analytics
+Summarize stock by blood group, storage location, and inventory state
+Audit logs
+Track inventory changes and the actors responsible
+Stronger access control
+Improve role separation and database permissions
+Resilient network handling
+Add retries, local buffering, and safe recovery from disconnection
+Automated tests
+Validate RFID processing, sensor logic, API requests, and database operations
+Calibration and reliability studies
+Establish documented measurement performance and operating limits
+Better traceability
+Represent inventory events and timestamps explicitly
+Complete deployment documentation
+Publish verified wiring, pin mappings, schema, and API contracts
+These are potential future improvements, not claims that the features are already implemented.
+🎯 Project Summary
+BloodLink brings together RFID-based item identification, environmental sensing, IR presence detection, ESP8266 connectivity, OLED feedback, Supabase-backed data management, and a web application in one academic prototype.
+Its four-slot demonstration represents the four blood groups while allowing multiple individual blood bags per slot. The project demonstrates the integration of embedded systems, IoT communication, cloud data handling, and inventory-management software.
+BloodLink is intended to demonstrate smart inventory monitoring—not to replace certified blood-bank equipment, validated storage procedures, or clinical decision-making.
+
+BloodLink · IoT · RFID · ESP8266 · Supabase · Inventory Monitoring
